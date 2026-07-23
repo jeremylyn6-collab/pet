@@ -1,0 +1,23 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile native EXE
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSINSTALL=%%i
+          call "%VSINSTALL%\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /O2 /W4 /DUNICODE /D_UNICODE cockroach.c /link /SUBSYSTEM:WINDOWS /OUT:DesktopCockroach.exe
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: DesktopCockroach-Windows
+          path: DesktopCockroach.exe
